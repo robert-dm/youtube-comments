@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>YouTube Comments Search - API Test</h1>
+
+    <button onclick="testAPI()">Test API Connection</button>
+    <button onclick="testDatabase()">Test Database</button>
+
+    <pre id="output"></pre>
+
+    <script>
+        const output = document.getElementById('output');
+
+        async function testAPI() {
+            output.textContent = 'Testing API connection...\n';
+            try {
+                const response = await fetch('http://localhost:3000/api/videos');
+                const data = await response.json();
+                output.textContent += 'SUCCESS: API is working!\n';
+                output.textContent += JSON.stringify(data, null, 2);
+            } catch (error) {
+                output.textContent += 'ERROR: ' + error.message;
+            }
+        }
+
+        async function testDatabase() {
+            output.textContent = 'Testing database connection...\n';
+            try {
+                const response = await fetch('http://localhost:3000/api/videos');
+                if (response.ok) {
+                    output.textContent += 'SUCCESS: Database connected!\n';
+                    const data = await response.json();
+                    output.textContent += 'Videos in database: ' + data.videos.length;
+                } else {
+                    output.textContent += 'ERROR: HTTP ' + response.status;
+                }
+            } catch (error) {
+                output.textContent += 'ERROR: ' + error.message;
+            }
+        }
+
+        console.log('Test page loaded successfully');
+    </script>
+</body>
+</html>

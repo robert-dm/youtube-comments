@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Comments Search</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>YouTube Comments Search</h1>
+            <p class="subtitle">Fetch and search through YouTube video comments</p>
+        </header>
+
+        <section class="fetch-section">
+            <h2>Fetch Comments</h2>
+            <div class="input-group">
+                <input
+                    type="text"
+                    id="youtube-url"
+                    placeholder="Enter YouTube video URL (e.g., https://youtube.com/watch?v=...)"
+                    autocomplete="off">
+                <button id="fetch-btn" class="btn btn-primary">Fetch transcript and comments</button>
+            </div>
+            <div id="fetch-status" class="status-message"></div>
+        </section>
+
+        <section class="search-section">
+            <h2>Search Comments</h2>
+            <div class="input-group">
+                <input
+                    type="text"
+                    id="search-query"
+                    placeholder="Enter search keywords..."
+                    autocomplete="off">
+                <button id="search-btn" class="btn btn-primary">Search</button>
+            </div>
+            <div id="search-status" class="status-message"></div>
+        </section>
+
+        <section class="results-section">
+            <div id="results-container"></div>
+        </section>
+
+        <section class="videos-section">
+            <h2>Fetched Videos</h2>
+            <button id="load-videos-btn" class="btn btn-secondary">Load Video History</button>
+            <div id="videos-container"></div>
+        </section>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
