@@ -3,51 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Comments Search</title>
+    <title>YouTube Comment Explorer</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>YouTube Comments Search</h1>
-            <p class="subtitle">Fetch and search through YouTube video comments</p>
-        </header>
+    <nav class="top-nav">
+        <div class="nav-content">
+            <div class="nav-left">
+                <h1 class="app-title">YouTube Comment Explorer</h1>
+                <p class="app-subtitle">Paste a video URL, fetch transcript + comments, then search and filter.</p>
+            </div>
+            <div class="nav-right">
+                <a href="#" class="nav-link">Docs</a>
+                <div class="nav-link">
+                    <span class="status-dot"></span>
+                    <span>API Status</span>
+                </div>
+                <a href="#" class="nav-link">Prehost</a>
+            </div>
+        </div>
+    </nav>
 
-        <section class="fetch-section">
-            <h2>Fetch Comments</h2>
-            <div class="input-group">
+    <div class="main-container">
+        <div class="card">
+            <h2 class="section-title">Video URL</h2>
+            <div class="url-input-group">
                 <input
                     type="text"
                     id="youtube-url"
-                    placeholder="Enter YouTube video URL (e.g., https://youtube.com/watch?v=...)"
+                    class="url-input"
+                    placeholder="Paste YouTube URL"
                     autocomplete="off">
-                <button id="fetch-btn" class="btn btn-primary">Fetch transcript and comments</button>
+                <button id="fetch-btn" class="btn-fetch">Fetch</button>
             </div>
+            <label class="checkbox-label">
+                <input type="checkbox" id="include-transcript" checked>
+                <span>Include transcript</span>
+            </label>
+            <p class="help-text">Public videos only. Large comment threads may take longer.</p>
             <div id="fetch-status" class="status-message"></div>
-        </section>
+        </div>
 
-        <section class="search-section">
-            <h2>Search Comments</h2>
-            <div class="input-group">
+        <div class="card">
+            <h2 class="section-title">Search Comments</h2>
+            <div class="search-input-wrapper">
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM18 18l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
                 <input
                     type="text"
                     id="search-query"
-                    placeholder="Enter search keywords..."
+                    class="search-input"
+                    placeholder="Search comments (keywords, @author, phrases...)"
                     autocomplete="off">
-                <button id="search-btn" class="btn btn-primary">Search</button>
+            </div>
+
+            <div class="sort-controls">
+                <span class="sort-label">Sort:</span>
+                <button class="sort-btn active" data-sort="top">Top</button>
+                <button class="sort-btn" data-sort="new">New</button>
+                <button class="sort-btn" data-sort="all">All</button>
+                <select class="sort-select">
+                    <option>Exact phrase</option>
+                    <option>Contains words</option>
+                </select>
+                <button class="sort-btn">Comments</button>
+                <button class="sort-btn sort-btn-icon">↓ Pin likes</button>
             </div>
             <div id="search-status" class="status-message"></div>
-        </section>
+        </div>
 
-        <section class="results-section">
-            <div id="results-container"></div>
-        </section>
+        <div class="content-grid">
+            <div class="results-column">
+                <h2 class="section-title">Results</h2>
+                <div id="results-container" class="results-area">
+                    <div class="empty-state">
+                        <svg class="empty-icon" width="120" height="120" viewBox="0 0 120 120" fill="none">
+                            <rect x="20" y="30" width="60" height="40" rx="4" fill="#E8EAF0"/>
+                            <circle cx="75" cy="75" r="30" stroke="#A0A3BD" stroke-width="6" fill="none"/>
+                            <path d="M95 95L110 110" stroke="#A0A3BD" stroke-width="6" stroke-linecap="round"/>
+                        </svg>
+                        <p class="empty-text">Paste a YouTube URL to begin.</p>
+                    </div>
+                </div>
+            </div>
 
-        <section class="videos-section">
-            <h2>Fetched Videos</h2>
-            <button id="load-videos-btn" class="btn btn-secondary">Load Video History</button>
-            <div id="videos-container"></div>
-        </section>
+            <div class="history-column">
+                <div class="history-header">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 20C4.477 20 0 15.523 0 10S4.477 0 10 0s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm1-8h4v2h-6V6h2v4z" fill="currentColor"/>
+                    </svg>
+                    <h3>History</h3>
+                    <button class="collapse-btn">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="history-content">
+                    <p class="history-placeholder">Fetched videos will appear here.</p>
+                    <div id="videos-container"></div>
+                    <button id="load-videos-btn" class="btn-view-history">View history</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="loading-overlay" class="loading-overlay hidden">

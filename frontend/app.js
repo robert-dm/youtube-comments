@@ -8,12 +8,12 @@ function initializeElements() {
         fetchBtn: document.getElementById('fetch-btn'),
         fetchStatus: document.getElementById('fetch-status'),
         searchQuery: document.getElementById('search-query'),
-        searchBtn: document.getElementById('search-btn'),
         searchStatus: document.getElementById('search-status'),
         resultsContainer: document.getElementById('results-container'),
         loadVideosBtn: document.getElementById('load-videos-btn'),
         videosContainer: document.getElementById('videos-container'),
-        loadingOverlay: document.getElementById('loading-overlay')
+        loadingOverlay: document.getElementById('loading-overlay'),
+        includeTranscript: document.getElementById('include-transcript')
     };
 
     if (elements.loadingOverlay) {
@@ -227,13 +227,21 @@ async function searchComments() {
     const query = elements.searchQuery.value.trim();
 
     if (!query) {
-        showStatus(elements.searchStatus, 'Please enter a search query', 'error');
+        elements.resultsContainer.innerHTML = `
+            <div class="empty-state">
+                <svg class="empty-icon" width="120" height="120" viewBox="0 0 120 120" fill="none">
+                    <rect x="20" y="30" width="60" height="40" rx="4" fill="#E8EAF0"/>
+                    <circle cx="75" cy="75" r="30" stroke="#A0A3BD" stroke-width="6" fill="none"/>
+                    <path d="M95 95L110 110" stroke="#A0A3BD" stroke-width="6" stroke-linecap="round"/>
+                </svg>
+                <p class="empty-text">Enter a search query to find comments and transcripts.</p>
+            </div>
+        `;
         return;
     }
 
     try {
         showLoading(true);
-        elements.searchBtn.disabled = true;
 
         const response = await fetch(`${API_BASE}/search`, {
             method: 'POST',
@@ -273,7 +281,6 @@ async function searchComments() {
         showStatus(elements.searchStatus, error.message, 'error');
     } finally {
         showLoading(false);
-        elements.searchBtn.disabled = false;
     }
 }
 
@@ -326,9 +333,14 @@ function initializeEventListeners() {
         if (e.key === 'Enter') fetchComments();
     });
 
-    elements.searchBtn.addEventListener('click', searchComments);
     elements.searchQuery.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') searchComments();
+    });
+
+    elements.searchQuery.addEventListener('input', (e) => {
+        if (e.target.value.trim()) {
+            searchComments();
+        }
     });
 
     elements.loadVideosBtn.addEventListener('click', loadVideos);
