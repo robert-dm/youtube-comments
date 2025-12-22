@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const youtube = require('../services/youtube');
+const sentimentAnalyzer = require('../services/sentiment');
 
 router.post('/fetch-comments', async (req, res) => {
     try {
@@ -127,6 +128,31 @@ router.post('/fetch-comments', async (req, res) => {
             transcriptCount = parseInt(existingTranscripts.rows[0].count);
         }
 
+        // Perform sentiment analysis on all comments
+        console.log('Starting sentiment analysis for', comments.length, 'comments...');
+        const sentimentResults = [];
+
+        for (const comment of comments) {
+            const dbCommentId = commentIdMap.get(comment.commentId);
+            if (!dbCommentId) continue;
+
+            const sentiment = await sentimentAnalyzer.analyzeComment(comment.text);
+            sentimentResults.push({
+                commentId: dbCommentId,
+                ...sentiment
+            });
+        }
+
+        // Save all sentiment results in bulk
+        if (sentimentResults.length > 0) {
+            await sentimentAnalyzer.saveBulkCommentSentiments(sentimentResults);
+        }
+
+        // Calculate and save video-level sentiment
+        const videoSentiment = await sentimentAnalyzer.calculateVideoSentiment(dbVideoId);
+
+        console.log('Sentiment analysis complete:', videoSentiment);
+
         res.json({
             success: true,
             video: videoDetails,
@@ -134,7 +160,8 @@ router.post('/fetch-comments', async (req, res) => {
             totalComments: comments.length,
             newComments: isUpdate ? newCommentsCount : comments.length,
             transcriptSegments: transcriptCount,
-            transcriptStatus: transcriptStatus
+            transcriptStatus: transcriptStatus,
+            sentiment: videoSentiment
         });
 
     } catch (error) {

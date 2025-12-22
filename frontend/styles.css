@@ -506,6 +506,43 @@ mark {
     font-size: 0.8rem;
 }
 
+.video-stats {
+    color: #A0AEC0;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.sentiment-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.sentiment-positive {
+    background: #C6F6D5;
+    color: #22543D;
+}
+
+.sentiment-negative {
+    background: #FED7D7;
+    color: #742A2A;
+}
+
+.sentiment-neutral {
+    background: #E2E8F0;
+    color: #4A5568;
+}
+
+.sentiment-mixed {
+    background: #FEEBC8;
+    color: #7C2D12;
+}
+
 /* Loading Overlay */
 .loading-overlay {
     position: fixed;

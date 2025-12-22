@@ -211,6 +211,18 @@ async function fetchComments() {
             message += ` (no transcript available)`;
         }
 
+        // Add sentiment information
+        if (data.sentiment) {
+            const sentiment = data.sentiment;
+            const sentimentEmoji = {
+                'positive': '😊',
+                'negative': '😞',
+                'neutral': '😐',
+                'mixed': '🤔'
+            };
+            message += ` | Sentiment: ${sentimentEmoji[sentiment.overallSentiment] || ''} ${sentiment.overallSentiment.toUpperCase()} (${sentiment.positivePercentage}% positive, ${sentiment.negativePercentage}% negative, ${sentiment.neutralPercentage}% neutral)`;
+        }
+
         showStatus(elements.fetchStatus, message, 'success');
 
         elements.youtubeUrl.value = '';
@@ -288,7 +300,7 @@ async function loadVideos() {
     try {
         showLoading(true);
 
-        const response = await fetch(`${API_BASE}/videos`);
+        const response = await fetch(`${API_BASE}/sentiment/overview`);
         const data = await response.json();
 
         if (!response.ok) {
@@ -306,10 +318,26 @@ async function loadVideos() {
             data.videos.forEach(video => {
                 const videoDiv = document.createElement('div');
                 videoDiv.className = 'video-item';
+
+                const sentimentEmoji = {
+                    'positive': '😊',
+                    'negative': '😞',
+                    'neutral': '😐',
+                    'mixed': '🤔'
+                };
+
+                let sentimentBadge = '';
+                if (video.overall_sentiment) {
+                    const emoji = sentimentEmoji[video.overall_sentiment] || '';
+                    const badgeClass = `sentiment-badge sentiment-${video.overall_sentiment}`;
+                    sentimentBadge = `<span class="${badgeClass}">${emoji} ${video.overall_sentiment}</span>`;
+                }
+
                 videoDiv.innerHTML = `
                     <div class="video-title">${video.title}</div>
                     <div class="video-channel">${video.channel_name}</div>
-                    <div class="video-date">Fetched: ${formatDate(video.fetched_at)}</div>
+                    ${sentimentBadge}
+                    ${video.total_comments ? `<div class="video-stats">${video.total_comments} comments analyzed</div>` : ''}
                     <a href="https://youtube.com/watch?v=${video.video_id}" target="_blank" class="video-link">Watch on YouTube</a>
                 `;
                 videosList.appendChild(videoDiv);
