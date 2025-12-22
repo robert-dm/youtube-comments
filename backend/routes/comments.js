@@ -128,15 +128,41 @@ router.post('/fetch-comments', async (req, res) => {
             transcriptCount = parseInt(existingTranscripts.rows[0].count);
         }
 
-        // Perform sentiment analysis on all comments
-        console.log('Starting sentiment analysis for', comments.length, 'comments...');
-        const sentimentResults = [];
+        // Perform sentiment analysis only on comments that don't have sentiment yet
+        console.log('Checking for comments needing sentiment analysis...');
+
+        const commentIdsToAnalyze = [];
+        const commentTextsMap = new Map();
 
         for (const comment of comments) {
             const dbCommentId = commentIdMap.get(comment.commentId);
             if (!dbCommentId) continue;
+            commentIdsToAnalyze.push(dbCommentId);
+            commentTextsMap.set(dbCommentId, comment.text);
+        }
 
-            const sentiment = await sentimentAnalyzer.analyzeComment(comment.text);
+        // Find which comments already have sentiment
+        let existingSentiments = [];
+        if (commentIdsToAnalyze.length > 0) {
+            const existingResult = await db.query(
+                'SELECT comment_id FROM comment_sentiments WHERE comment_id = ANY($1)',
+                [commentIdsToAnalyze]
+            );
+            existingSentiments = existingResult.rows.map(row => row.comment_id);
+        }
+
+        // Only analyze comments without sentiment
+        const commentsToAnalyze = commentIdsToAnalyze.filter(id => !existingSentiments.includes(id));
+
+        console.log(`Analyzing ${commentsToAnalyze.length} new comments (${existingSentiments.length} already analyzed)`);
+
+        const sentimentResults = [];
+
+        for (const dbCommentId of commentsToAnalyze) {
+            const commentText = commentTextsMap.get(dbCommentId);
+            if (!commentText) continue;
+
+            const sentiment = await sentimentAnalyzer.analyzeComment(commentText);
             sentimentResults.push({
                 commentId: dbCommentId,
                 ...sentiment
@@ -146,6 +172,7 @@ router.post('/fetch-comments', async (req, res) => {
         // Save all sentiment results in bulk
         if (sentimentResults.length > 0) {
             await sentimentAnalyzer.saveBulkCommentSentiments(sentimentResults);
+            console.log(`Saved sentiment for ${sentimentResults.length} comments`);
         }
 
         // Calculate and save video-level sentiment
