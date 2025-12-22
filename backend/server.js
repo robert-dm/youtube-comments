@@ -27,7 +27,10 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Something went wrong!' });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log('YouTube Comments Search API is ready');
 });
+
+// Increase timeout to 5 minutes for long-running operations
+server.timeout = 300000;
