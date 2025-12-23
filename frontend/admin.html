@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - YouTube Comment Explorer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="admin-login-screen">
+        <div class="login-container">
+            <h1>🔐 Admin Login</h1>
+            <p>Enter admin password to access the dashboard</p>
+            <form id="login-form">
+                <input type="password" id="admin-password" placeholder="Admin Password" required>
+                <button type="submit" class="btn-login">Login</button>
+            </form>
+            <div id="login-error" class="error-message"></div>
+            <a href="/" class="back-link">← Back to Home</a>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="admin-dashboard hidden">
+        <nav class="admin-nav">
+            <div class="nav-content">
+                <h1>📊 Admin Dashboard</h1>
+                <div class="admin-actions">
+                    <a href="/" class="nav-link">Home</a>
+                    <button id="logout-btn" class="btn-logout">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="admin-container">
+            <!-- Statistics Cards -->
+            <div class="stats-section">
+                <h2>Database Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🎥</div>
+                        <div class="stat-value" id="stat-videos">-</div>
+                        <div class="stat-label">Total Videos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💬</div>
+                        <div class="stat-value" id="stat-comments">-</div>
+                        <div class="stat-label">Total Comments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-value" id="stat-transcripts">-</div>
+                        <div class="stat-label">Total Transcripts</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💾</div>
+                        <div class="stat-value" id="stat-size">-</div>
+                        <div class="stat-label">Database Size</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dangerous Actions -->
+            <div class="danger-zone">
+                <h2>⚠️ Danger Zone</h2>
+                <div class="danger-actions">
+                    <button class="btn-danger" onclick="confirmPurge('sentiment')">Purge Sentiment Data</button>
+                    <button class="btn-danger" onclick="confirmPurge('transcripts')">Purge All Transcripts</button>
+                    <button class="btn-danger" onclick="confirmPurge('comments')">Purge All Comments</button>
+                    <button class="btn-danger-extreme" onclick="confirmPurge('all')">⚠️ PURGE ALL DATA</button>
+                </div>
+            </div>
+
+            <!-- Videos List -->
+            <div class="videos-section">
+                <div class="section-header">
+                    <h2>All Videos</h2>
+                    <button id="refresh-btn" class="btn-refresh">🔄 Refresh</button>
+                </div>
+                <div class="videos-table-container">
+                    <table class="videos-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Channel</th>
+                                <th>Comments</th>
+                                <th>Sentiment</th>
+                                <th>Fetched</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="videos-tbody">
+                            <tr>
+                                <td colspan="6" class="loading-row">Loading videos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p>Processing...</p>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

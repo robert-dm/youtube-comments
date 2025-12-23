@@ -1,0 +1,352 @@
+/* Admin Login Screen */
+.admin-login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login-container {
+    background: white;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 100%;
+}
+
+.login-container h1 {
+    margin: 0 0 0.5rem 0;
+    color: #2D3748;
+    text-align: center;
+}
+
+.login-container p {
+    color: #718096;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+#login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+#login-form input {
+    padding: 0.75rem 1rem;
+    border: 2px solid #E2E8F0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+#login-form input:focus {
+    outline: none;
+    border-color: #5B7CED;
+}
+
+.btn-login {
+    background: #5B7CED;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-login:hover {
+    background: #4C63D2;
+}
+
+.error-message {
+    background: #FFF5F5;
+    color: #742A2A;
+    padding: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #FEB2B2;
+    margin-top: 1rem;
+    display: none;
+}
+
+.back-link {
+    display: block;
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #5B7CED;
+    text-decoration: none;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+/* Admin Dashboard */
+.admin-dashboard {
+    min-height: 100vh;
+    background: #F7FAFC;
+}
+
+.admin-nav {
+    background: white;
+    border-bottom: 1px solid #E2E8F0;
+    padding: 1.5rem 0;
+}
+
+.admin-nav .nav-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-nav h1 {
+    margin: 0;
+    color: #2D3748;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.btn-logout {
+    background: #F56565;
+    color: white;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.btn-logout:hover {
+    background: #E53E3E;
+}
+
+.admin-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Statistics Section */
+.stats-section {
+    margin-bottom: 3rem;
+}
+
+.stats-section h2 {
+    margin: 0 0 1.5rem 0;
+    color: #2D3748;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Danger Zone */
+.danger-zone {
+    background: #FFF5F5;
+    border: 2px solid #FEB2B2;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 3rem;
+}
+
+.danger-zone h2 {
+    margin: 0 0 1.5rem 0;
+    color: #742A2A;
+}
+
+.danger-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.btn-danger {
+    background: #FC8181;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.btn-danger:hover {
+    background: #F56565;
+}
+
+.btn-danger-extreme {
+    background: #C53030;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-danger-extreme:hover {
+    background: #9B2C2C;
+}
+
+/* Videos Section */
+.videos-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+    margin: 0;
+    color: #2D3748;
+}
+
+.btn-refresh {
+    background: #5B7CED;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.btn-refresh:hover {
+    background: #4C63D2;
+}
+
+.videos-table-container {
+    overflow-x: auto;
+}
+
+.videos-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.videos-table thead {
+    background: #F7FAFC;
+}
+
+.videos-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #4A5568;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #E2E8F0;
+}
+
+.videos-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.video-title-cell {
+    max-width: 400px;
+}
+
+.video-title-cell strong {
+    display: block;
+    color: #2D3748;
+    margin-bottom: 0.25rem;
+}
+
+.video-id-small {
+    font-size: 0.75rem;
+    color: #A0AEC0;
+    font-family: monospace;
+}
+
+.text-small {
+    font-size: 0.875rem;
+    color: #A0AEC0;
+}
+
+.text-muted {
+    color: #A0AEC0;
+}
+
+.loading-row,
+.no-data,
+.error-row {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #A0AEC0;
+}
+
+.error-row {
+    color: #F56565;
+}
+
+.btn-delete-small {
+    background: #FC8181;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.btn-delete-small:hover {
+    background: #F56565;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .admin-nav .nav-content {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .danger-actions {
+        flex-direction: column;
+    }
+
+    .danger-actions button {
+        width: 100%;
+    }
+
+    .videos-table {
+        font-size: 0.875rem;
+    }
+
+    .videos-table th,
+    .videos-table td {
+        padding: 0.75rem 0.5rem;
+    }
+}
