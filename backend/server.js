@@ -6,6 +6,7 @@ require('dotenv').config();
 const commentsRoutes = require('./routes/comments');
 const searchRoutes = require('./routes/search');
 const sentimentRoutes = require('./routes/sentiment');
+const videoDetailsRoutes = require('./routes/videoDetails');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,7 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 app.use('/api', commentsRoutes);
 app.use('/api', searchRoutes);
 app.use('/api/sentiment', sentimentRoutes);
+app.use('/api/video', videoDetailsRoutes);
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
