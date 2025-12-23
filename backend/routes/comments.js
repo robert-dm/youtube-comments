@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const youtube = require('../services/youtube');
-const sentimentAnalyzer = require('../services/sentiment');
+// Use AI-based sentiment analysis instead of keyword-based
+const sentimentAnalyzer = require('../services/sentimentAI');
 
 router.post('/fetch-comments', async (req, res) => {
     try {
