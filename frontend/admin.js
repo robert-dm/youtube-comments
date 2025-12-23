@@ -155,10 +155,25 @@ async function loadVideos() {
                 </td>
                 <td>${sentimentBadge}</td>
                 <td>${new Date(video.fetched_at).toLocaleString()}</td>
-                <td>
-                    <button class="btn-delete-small" onclick="deleteVideo(${video.id}, '${video.title.replace(/'/g, "\\'")}')">
-                        🗑️ Delete
-                    </button>
+                <td class="actions-cell">
+                    <div class="dropdown">
+                        <button class="btn-actions-dropdown">⋮ Actions</button>
+                        <div class="dropdown-content">
+                            <button class="dropdown-item" onclick="purgeVideoData(${video.id}, 'comments', '${video.title.replace(/'/g, "\\'")}')">
+                                💬 Purge Comments
+                            </button>
+                            <button class="dropdown-item" onclick="purgeVideoData(${video.id}, 'transcripts', '${video.title.replace(/'/g, "\\'")}')">
+                                📝 Purge Transcripts
+                            </button>
+                            <button class="dropdown-item" onclick="purgeVideoData(${video.id}, 'sentiment', '${video.title.replace(/'/g, "\\'")}')">
+                                😊 Purge Sentiment
+                            </button>
+                            <hr class="dropdown-divider">
+                            <button class="dropdown-item danger" onclick="deleteVideo(${video.id}, '${video.title.replace(/'/g, "\\'")}')">
+                                🗑️ Delete Video
+                            </button>
+                        </div>
+                    </div>
                 </td>
             `;
 
@@ -198,6 +213,43 @@ async function deleteVideo(id, title) {
 
     } catch (error) {
         alert('Error deleting video: ' + error.message);
+    } finally {
+        document.getElementById('loading-overlay').classList.add('hidden');
+    }
+}
+
+// Purge data for a specific video
+async function purgeVideoData(id, type, title) {
+    const messages = {
+        'comments': `Delete all comments for "${title}"?\n\nThis will remove:\n- All comments and replies\n- Comment sentiment data\n\nVideo will remain but comments must be re-fetched.`,
+        'transcripts': `Delete all transcripts for "${title}"?\n\nYou can re-fetch them by re-fetching the video.`,
+        'sentiment': `Delete sentiment analysis for "${title}"?\n\nYou can re-analyze by re-fetching the video.`
+    };
+
+    if (!confirm(messages[type])) {
+        return;
+    }
+
+    try {
+        const overlay = document.getElementById('loading-overlay');
+        overlay.classList.remove('hidden');
+
+        const response = await fetch(`${API_BASE}/admin/video/${id}/${type}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('✓ ' + data.message);
+            loadDashboardData();
+        } else {
+            alert('Error: ' + data.error);
+        }
+
+    } catch (error) {
+        alert('Error: ' + error.message);
     } finally {
         document.getElementById('loading-overlay').classList.add('hidden');
     }

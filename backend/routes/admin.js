@@ -153,6 +153,107 @@ router.delete('/video/:id', authenticateAdmin, async (req, res) => {
     }
 });
 
+// Delete comments for a specific video
+router.delete('/video/:id/comments', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const videoResult = await db.query('SELECT title FROM videos WHERE id = $1', [id]);
+        if (videoResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Video not found' });
+        }
+
+        const video = videoResult.rows[0];
+
+        // Delete comments (cascade will delete replies and comment sentiments)
+        const result = await db.query('DELETE FROM comments WHERE video_id = $1', [id]);
+
+        // Update video sentiment to reflect no comments
+        await db.query('DELETE FROM video_sentiments WHERE video_id = $1', [id]);
+
+        console.log(`Admin deleted comments for video: ${video.title} (${result.rowCount} comments)`);
+
+        res.json({
+            success: true,
+            message: `Deleted ${result.rowCount} comments for "${video.title}"`,
+            deletedCount: result.rowCount
+        });
+
+    } catch (error) {
+        console.error('Error deleting comments:', error);
+        res.status(500).json({ error: 'Failed to delete comments' });
+    }
+});
+
+// Delete transcripts for a specific video
+router.delete('/video/:id/transcripts', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const videoResult = await db.query('SELECT title FROM videos WHERE id = $1', [id]);
+        if (videoResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Video not found' });
+        }
+
+        const video = videoResult.rows[0];
+
+        // Delete transcripts
+        const result = await db.query('DELETE FROM transcripts WHERE video_id = $1', [id]);
+
+        // Update video flag
+        await db.query('UPDATE videos SET has_transcript = FALSE WHERE id = $1', [id]);
+
+        console.log(`Admin deleted transcripts for video: ${video.title} (${result.rowCount} segments)`);
+
+        res.json({
+            success: true,
+            message: `Deleted ${result.rowCount} transcript segments for "${video.title}"`,
+            deletedCount: result.rowCount
+        });
+
+    } catch (error) {
+        console.error('Error deleting transcripts:', error);
+        res.status(500).json({ error: 'Failed to delete transcripts' });
+    }
+});
+
+// Delete sentiment analysis for a specific video
+router.delete('/video/:id/sentiment', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const videoResult = await db.query('SELECT title FROM videos WHERE id = $1', [id]);
+        if (videoResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Video not found' });
+        }
+
+        const video = videoResult.rows[0];
+
+        // Delete comment sentiments
+        const commentSentimentsResult = await db.query(`
+            DELETE FROM comment_sentiments
+            WHERE comment_id IN (
+                SELECT id FROM comments WHERE video_id = $1
+            )
+        `, [id]);
+
+        // Delete video sentiment
+        await db.query('DELETE FROM video_sentiments WHERE video_id = $1', [id]);
+
+        console.log(`Admin deleted sentiment for video: ${video.title}`);
+
+        res.json({
+            success: true,
+            message: `Deleted sentiment analysis for "${video.title}"`,
+            deletedCommentSentiments: commentSentimentsResult.rowCount
+        });
+
+    } catch (error) {
+        console.error('Error deleting sentiment:', error);
+        res.status(500).json({ error: 'Failed to delete sentiment' });
+    }
+});
+
 // Purge all data or specific data types
 router.post('/purge', authenticateAdmin, async (req, res) => {
     try {
