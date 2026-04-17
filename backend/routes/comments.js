@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const youtube = require('../services/youtube');
-// Use AI-based sentiment analysis instead of keyword-based
-const sentimentAnalyzer = require('../services/sentimentAI');
+// Sentiment analyzers - LLM preferred when configured, fallback to local
+const localSentimentAnalyzer = require('../services/sentimentAI');
+const llmSentimentAnalyzer = require('../services/sentimentLLM');
 
 router.post('/fetch-comments', async (req, res) => {
     try {
@@ -152,6 +153,11 @@ router.post('/fetch-comments', async (req, res) => {
         // Perform sentiment analysis only on comments that don't have sentiment yet
         console.log('Performing sentiment analysis...');
 
+        // Determine which analyzer to use
+        const useLLM = await llmSentimentAnalyzer.isEnabled();
+        const sentimentAnalyzer = useLLM ? llmSentimentAnalyzer : localSentimentAnalyzer;
+        console.log(`  → Using ${useLLM ? 'LLM' : 'local keyword-based'} sentiment analysis`);
+
         const commentIdsToAnalyze = [];
         const commentTextsMap = new Map();
 
@@ -180,19 +186,44 @@ router.post('/fetch-comments', async (req, res) => {
         const sentimentResults = [];
         let analyzedCount = 0;
 
-        for (const dbCommentId of commentsToAnalyze) {
-            const commentText = commentTextsMap.get(dbCommentId);
-            if (!commentText) continue;
+        if (useLLM) {
+            // LLM: process in batches with concurrency
+            const batchSize = 10;
+            for (let i = 0; i < commentsToAnalyze.length; i += batchSize) {
+                const batch = commentsToAnalyze.slice(i, i + batchSize);
+                const batchPromises = batch.map(async (dbCommentId) => {
+                    const commentText = commentTextsMap.get(dbCommentId);
+                    if (!commentText) return null;
+                    const sentiment = await sentimentAnalyzer.analyzeComment(commentText);
+                    return { commentId: dbCommentId, ...sentiment };
+                });
 
-            const sentiment = await sentimentAnalyzer.analyzeComment(commentText);
-            sentimentResults.push({
-                commentId: dbCommentId,
-                ...sentiment
-            });
+                const batchResults = await Promise.all(batchPromises);
+                for (const result of batchResults) {
+                    if (result) sentimentResults.push(result);
+                }
 
-            analyzedCount++;
-            if (analyzedCount % 50 === 0) {
-                console.log(`  → Analyzed ${analyzedCount}/${commentsToAnalyze.length} comments...`);
+                analyzedCount += batch.length;
+                if (analyzedCount % 50 === 0 || analyzedCount === commentsToAnalyze.length) {
+                    console.log(`  → Analyzed ${analyzedCount}/${commentsToAnalyze.length} comments...`);
+                }
+            }
+        } else {
+            // Local: process sequentially (fast, no API calls)
+            for (const dbCommentId of commentsToAnalyze) {
+                const commentText = commentTextsMap.get(dbCommentId);
+                if (!commentText) continue;
+
+                const sentiment = await sentimentAnalyzer.analyzeComment(commentText);
+                sentimentResults.push({
+                    commentId: dbCommentId,
+                    ...sentiment
+                });
+
+                analyzedCount++;
+                if (analyzedCount % 50 === 0) {
+                    console.log(`  → Analyzed ${analyzedCount}/${commentsToAnalyze.length} comments...`);
+                }
             }
         }
 

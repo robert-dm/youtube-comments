@@ -62,6 +62,65 @@
                 </div>
             </div>
 
+            <!-- LLM Configuration -->
+            <div class="llm-config-section">
+                <div class="section-header">
+                    <h2>Sentiment Analysis Configuration</h2>
+                </div>
+
+                <div class="llm-status-bar" id="llm-status-bar">
+                    <span class="llm-status-indicator" id="llm-status-indicator"></span>
+                    <span id="llm-status-text">Loading...</span>
+                </div>
+
+                <div class="llm-form">
+                    <div class="llm-toggle-row">
+                        <label class="toggle-label" for="llm-enabled">
+                            <strong>Enable LLM Analysis</strong>
+                            <span class="toggle-description">When disabled, the system uses local keyword-based analysis</span>
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="llm-enabled">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div id="llm-settings" class="llm-settings">
+                        <div class="llm-field">
+                            <label for="llm-provider">Provider</label>
+                            <select id="llm-provider">
+                                <option value="">-- Select Provider --</option>
+                                <option value="openai">OpenAI</option>
+                                <option value="anthropic">Anthropic (Claude)</option>
+                            </select>
+                        </div>
+
+                        <div class="llm-field">
+                            <label for="llm-model">Model</label>
+                            <select id="llm-model">
+                                <option value="">-- Select model --</option>
+                            </select>
+                        </div>
+
+                        <div class="llm-field">
+                            <label for="llm-api-key">API Key</label>
+                            <div class="api-key-input">
+                                <input type="password" id="llm-api-key" placeholder="Enter API key...">
+                                <button type="button" class="btn-toggle-key" onclick="toggleApiKeyVisibility()">Show</button>
+                            </div>
+                            <div class="api-key-status" id="api-key-status"></div>
+                        </div>
+
+                        <div class="llm-actions">
+                            <button class="btn-save-llm" onclick="saveLLMConfig()">Save Configuration</button>
+                            <button class="btn-test-llm" onclick="testLLMConnection()">Test Connection</button>
+                        </div>
+
+                        <div id="llm-test-result" class="llm-test-result hidden"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Dangerous Actions -->
             <div class="danger-zone">
                 <h2>⚠️ Danger Zone</h2>

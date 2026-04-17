@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const db = require('../config/database');
+const llmAnalyzer = require('../services/sentimentLLM');
 
 // Simple admin authentication middleware
 const authenticateAdmin = (req, res, next) => {
@@ -299,6 +300,101 @@ router.post('/purge', authenticateAdmin, async (req, res) => {
     } catch (error) {
         console.error('Error purging data:', error);
         res.status(500).json({ error: 'Failed to purge data' });
+    }
+});
+
+// Get LLM configuration
+router.get('/llm-config', authenticateAdmin, async (req, res) => {
+    try {
+        const result = await db.query(
+            "SELECT config_key, config_value FROM sentiment_config WHERE config_key LIKE 'llm_%'"
+        );
+
+        const config = {};
+        result.rows.forEach(row => {
+            config[row.config_key] = row.config_value;
+        });
+
+        // Mask API key for security
+        if (config.llm_api_key) {
+            const key = config.llm_api_key;
+            config.llm_api_key_masked = key.substring(0, 8) + '...' + key.substring(key.length - 4);
+            config.llm_api_key_set = true;
+        } else {
+            config.llm_api_key_masked = '';
+            config.llm_api_key_set = false;
+        }
+
+        res.json(config);
+
+    } catch (error) {
+        console.error('Error fetching LLM config:', error);
+        res.status(500).json({ error: 'Failed to fetch LLM configuration' });
+    }
+});
+
+// Save LLM configuration
+router.post('/llm-config', authenticateAdmin, async (req, res) => {
+    try {
+        const { llm_enabled, llm_provider, llm_model, llm_api_key } = req.body;
+
+        const settings = {
+            llm_enabled: llm_enabled ? 'true' : 'false',
+            llm_provider: llm_provider || '',
+            llm_model: llm_model || ''
+        };
+
+        // Only update API key if a new one is provided
+        if (llm_api_key && llm_api_key.trim() !== '') {
+            settings.llm_api_key = llm_api_key.trim();
+        }
+
+        for (const [key, value] of Object.entries(settings)) {
+            await db.query(`
+                INSERT INTO sentiment_config (config_key, config_value, description)
+                VALUES ($1, $2, $3)
+                ON CONFLICT (config_key)
+                DO UPDATE SET config_value = EXCLUDED.config_value, updated_at = CURRENT_TIMESTAMP
+            `, [key, value, `LLM setting: ${key}`]);
+        }
+
+        // Invalidate cached config
+        llmAnalyzer.invalidateConfig();
+
+        console.log(`Admin updated LLM config: provider=${llm_provider}, model=${llm_model}, enabled=${llm_enabled}`);
+
+        res.json({ success: true, message: 'LLM configuration saved successfully' });
+
+    } catch (error) {
+        console.error('Error saving LLM config:', error);
+        res.status(500).json({ error: 'Failed to save LLM configuration' });
+    }
+});
+
+// Test LLM connection
+router.post('/llm-test', authenticateAdmin, async (req, res) => {
+    try {
+        const isEnabled = await llmAnalyzer.isEnabled();
+        if (!isEnabled) {
+            return res.status(400).json({ error: 'LLM is not configured or enabled. Save your configuration first.' });
+        }
+
+        const testComment = 'This video is absolutely amazing! I love the content and learned so much. Thank you!';
+        const result = await llmAnalyzer.analyzeComment(testComment);
+
+        res.json({
+            success: true,
+            testComment,
+            result: {
+                sentiment: result.sentiment,
+                score: result.rawScore,
+                confidence: result.confidence
+            }
+        });
+
+    } catch (error) {
+        console.error('Error testing LLM:', error);
+        res.status(500).json({ error: 'LLM test failed: ' + error.message });
     }
 });
 

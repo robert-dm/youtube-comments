@@ -185,6 +185,237 @@
     font-weight: 600;
 }
 
+/* LLM Configuration Section */
+.llm-config-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 3rem;
+}
+
+.llm-status-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #F7FAFC;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    color: #4A5568;
+}
+
+.llm-status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #A0AEC0;
+}
+
+.llm-status-indicator.active {
+    background: #48BB78;
+}
+
+.llm-status-indicator.inactive {
+    background: #A0AEC0;
+}
+
+.llm-toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #E2E8F0;
+    margin-bottom: 1.5rem;
+}
+
+.toggle-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.toggle-description {
+    font-size: 0.825rem;
+    color: #718096;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #CBD5E0;
+    transition: 0.3s;
+    border-radius: 26px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: #5B7CED;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+.llm-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.llm-settings.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.llm-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.llm-field label {
+    font-weight: 600;
+    color: #2D3748;
+    font-size: 0.9rem;
+}
+
+.llm-field select,
+.llm-field input {
+    padding: 0.65rem 0.85rem;
+    border: 2px solid #E2E8F0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+    background: white;
+}
+
+.llm-field select:focus,
+.llm-field input:focus {
+    outline: none;
+    border-color: #5B7CED;
+}
+
+.api-key-input {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.api-key-input input {
+    flex: 1;
+}
+
+.btn-toggle-key {
+    background: #E2E8F0;
+    border: none;
+    padding: 0.65rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #4A5568;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.btn-toggle-key:hover {
+    background: #CBD5E0;
+}
+
+.api-key-status {
+    font-size: 0.8rem;
+    color: #718096;
+}
+
+.api-key-status.has-key {
+    color: #48BB78;
+}
+
+.llm-actions {
+    display: flex;
+    gap: 1rem;
+    padding-top: 0.5rem;
+}
+
+.btn-save-llm {
+    background: #5B7CED;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: background 0.2s;
+}
+
+.btn-save-llm:hover {
+    background: #4C63D2;
+}
+
+.btn-test-llm {
+    background: white;
+    color: #5B7CED;
+    border: 2px solid #5B7CED;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.btn-test-llm:hover {
+    background: #EBF4FF;
+}
+
+.llm-test-result {
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.llm-test-result.success {
+    background: #F0FFF4;
+    border: 1px solid #C6F6D5;
+    color: #22543D;
+}
+
+.llm-test-result.error {
+    background: #FFF5F5;
+    border: 1px solid #FEB2B2;
+    color: #742A2A;
+}
+
 /* Danger Zone */
 .danger-zone {
     background: #FFF5F5;

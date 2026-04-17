@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 
 let elements = {};
 
@@ -226,6 +226,9 @@ async function fetchComments() {
         showStatus(elements.fetchStatus, message, 'success');
 
         elements.youtubeUrl.value = '';
+
+        // Refresh the videos list to show the newly loaded video
+        loadVideos();
 
     } catch (error) {
         showStatus(elements.fetchStatus, error.message, 'error');

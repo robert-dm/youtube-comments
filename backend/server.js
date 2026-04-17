@@ -46,10 +46,16 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Something went wrong!' });
 });
 
-const server = app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log('YouTube Comments Search API is ready');
-});
+// Only listen when running locally (not on Vercel)
+if (process.env.VERCEL !== '1') {
+    const server = app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+        console.log('YouTube Comments Search API is ready');
+    });
 
-// Increase timeout to 5 minutes for long-running operations
-server.timeout = 300000;
+    // Increase timeout to 5 minutes for long-running operations
+    server.timeout = 300000;
+}
+
+// Export for Vercel serverless
+module.exports = app;

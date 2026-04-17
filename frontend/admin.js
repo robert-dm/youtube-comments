@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 
 let isAdmin = false;
 
@@ -79,6 +79,7 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
 async function loadDashboardData() {
     loadStatistics();
     loadVideos();
+    loadLLMConfig();
 }
 
 // Load statistics
@@ -300,6 +301,207 @@ async function confirmPurge(type) {
         alert('Error: ' + error.message);
     } finally {
         document.getElementById('loading-overlay').classList.add('hidden');
+    }
+}
+
+// === LLM Configuration ===
+
+const LLM_MODELS = {
+    openai: [
+        { value: 'gpt-4o-mini', label: 'GPT-4o Mini (cheapest)' },
+        { value: 'gpt-4o', label: 'GPT-4o' },
+        { value: 'gpt-4.1-mini', label: 'GPT-4.1 Mini' },
+        { value: 'gpt-4.1', label: 'GPT-4.1' }
+    ],
+    anthropic: [
+        { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 (cheapest)' },
+        { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
+        { value: 'claude-opus-4-6', label: 'Claude Opus 4.6' }
+    ]
+};
+
+async function loadLLMConfig() {
+    try {
+        const response = await fetch(`${API_BASE}/admin/llm-config`, {
+            credentials: 'include'
+        });
+
+        if (!response.ok) return;
+
+        const config = await response.json();
+
+        const enabledCheckbox = document.getElementById('llm-enabled');
+        const providerSelect = document.getElementById('llm-provider');
+        const modelSelect = document.getElementById('llm-model');
+        const statusIndicator = document.getElementById('llm-status-indicator');
+        const statusText = document.getElementById('llm-status-text');
+        const apiKeyStatus = document.getElementById('api-key-status');
+        const settings = document.getElementById('llm-settings');
+
+        // Set enabled state
+        const isEnabled = config.llm_enabled === 'true';
+        enabledCheckbox.checked = isEnabled;
+
+        // Set provider
+        if (config.llm_provider) {
+            providerSelect.value = config.llm_provider;
+            updateModelOptions(config.llm_provider);
+        }
+
+        // Set model
+        if (config.llm_model) {
+            modelSelect.value = config.llm_model;
+        }
+
+        // Show API key status
+        if (config.llm_api_key_set) {
+            apiKeyStatus.textContent = 'Current key: ' + config.llm_api_key_masked;
+            apiKeyStatus.className = 'api-key-status has-key';
+            document.getElementById('llm-api-key').placeholder = 'Key is set. Enter new key to change...';
+        }
+
+        // Update status bar
+        if (isEnabled && config.llm_api_key_set && config.llm_provider) {
+            statusIndicator.className = 'llm-status-indicator active';
+            statusText.textContent = `LLM active: ${config.llm_provider} / ${config.llm_model}`;
+        } else if (isEnabled) {
+            statusIndicator.className = 'llm-status-indicator inactive';
+            statusText.textContent = 'LLM enabled but not fully configured';
+        } else {
+            statusIndicator.className = 'llm-status-indicator inactive';
+            statusText.textContent = 'Using local keyword-based analysis';
+        }
+
+        // Toggle settings visibility
+        updateSettingsState(isEnabled);
+
+    } catch (error) {
+        console.error('Error loading LLM config:', error);
+    }
+}
+
+function updateModelOptions(provider) {
+    const modelSelect = document.getElementById('llm-model');
+    const models = LLM_MODELS[provider] || [];
+
+    modelSelect.innerHTML = '<option value="">-- Select model --</option>';
+    models.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.value;
+        option.textContent = model.label;
+        modelSelect.appendChild(option);
+    });
+}
+
+function updateSettingsState(enabled) {
+    const settings = document.getElementById('llm-settings');
+    if (enabled) {
+        settings.classList.remove('disabled');
+    } else {
+        settings.classList.add('disabled');
+    }
+}
+
+// Provider change handler
+document.getElementById('llm-provider').addEventListener('change', (e) => {
+    updateModelOptions(e.target.value);
+});
+
+// Toggle handler
+document.getElementById('llm-enabled').addEventListener('change', (e) => {
+    updateSettingsState(e.target.checked);
+});
+
+function toggleApiKeyVisibility() {
+    const input = document.getElementById('llm-api-key');
+    const btn = input.nextElementSibling;
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = 'Hide';
+    } else {
+        input.type = 'password';
+        btn.textContent = 'Show';
+    }
+}
+
+async function saveLLMConfig() {
+    try {
+        const overlay = document.getElementById('loading-overlay');
+        overlay.classList.remove('hidden');
+
+        const config = {
+            llm_enabled: document.getElementById('llm-enabled').checked,
+            llm_provider: document.getElementById('llm-provider').value,
+            llm_model: document.getElementById('llm-model').value,
+            llm_api_key: document.getElementById('llm-api-key').value
+        };
+
+        if (config.llm_enabled && !config.llm_provider) {
+            alert('Please select a provider');
+            overlay.classList.add('hidden');
+            return;
+        }
+
+        if (config.llm_enabled && !config.llm_model) {
+            alert('Please select a model');
+            overlay.classList.add('hidden');
+            return;
+        }
+
+        const response = await fetch(`${API_BASE}/admin/llm-config`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(config)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('Configuration saved successfully');
+            document.getElementById('llm-api-key').value = '';
+            loadLLMConfig();
+        } else {
+            alert('Error: ' + data.error);
+        }
+
+    } catch (error) {
+        alert('Error saving configuration: ' + error.message);
+    } finally {
+        document.getElementById('loading-overlay').classList.add('hidden');
+    }
+}
+
+async function testLLMConnection() {
+    const resultDiv = document.getElementById('llm-test-result');
+    resultDiv.classList.remove('hidden', 'success', 'error');
+    resultDiv.textContent = 'Testing connection...';
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/llm-test`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            resultDiv.className = 'llm-test-result success';
+            resultDiv.innerHTML = `
+                <strong>Connection successful!</strong><br>
+                Test comment: "${data.testComment}"<br>
+                Result: ${data.result.sentiment} (score: ${data.result.score}, confidence: ${(data.result.confidence * 100).toFixed(0)}%)
+            `;
+        } else {
+            resultDiv.className = 'llm-test-result error';
+            resultDiv.textContent = 'Error: ' + data.error;
+        }
+
+    } catch (error) {
+        resultDiv.className = 'llm-test-result error';
+        resultDiv.textContent = 'Connection failed: ' + error.message;
     }
 }
 
