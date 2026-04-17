@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 
 let elements = {};
 
@@ -211,9 +211,24 @@ async function fetchComments() {
             message += ` (no transcript available)`;
         }
 
+        // Add sentiment information
+        if (data.sentiment) {
+            const sentiment = data.sentiment;
+            const sentimentEmoji = {
+                'positive': '😊',
+                'negative': '😞',
+                'neutral': '😐',
+                'mixed': '🤔'
+            };
+            message += ` | Sentiment: ${sentimentEmoji[sentiment.overallSentiment] || ''} ${sentiment.overallSentiment.toUpperCase()} (${sentiment.positivePercentage}% positive, ${sentiment.negativePercentage}% negative, ${sentiment.neutralPercentage}% neutral)`;
+        }
+
         showStatus(elements.fetchStatus, message, 'success');
 
         elements.youtubeUrl.value = '';
+
+        // Refresh the videos list to show the newly loaded video
+        loadVideos();
 
     } catch (error) {
         showStatus(elements.fetchStatus, error.message, 'error');
@@ -288,7 +303,7 @@ async function loadVideos() {
     try {
         showLoading(true);
 
-        const response = await fetch(`${API_BASE}/videos`);
+        const response = await fetch(`${API_BASE}/sentiment/overview`);
         const data = await response.json();
 
         if (!response.ok) {
@@ -306,12 +321,34 @@ async function loadVideos() {
             data.videos.forEach(video => {
                 const videoDiv = document.createElement('div');
                 videoDiv.className = 'video-item';
+
+                const sentimentEmoji = {
+                    'positive': '😊',
+                    'negative': '😞',
+                    'neutral': '😐',
+                    'mixed': '🤔'
+                };
+
+                let sentimentBadge = '';
+                if (video.overall_sentiment) {
+                    const emoji = sentimentEmoji[video.overall_sentiment] || '';
+                    const badgeClass = `sentiment-badge sentiment-${video.overall_sentiment}`;
+                    sentimentBadge = `<span class="${badgeClass}">${emoji} ${video.overall_sentiment}</span>`;
+                }
+
                 videoDiv.innerHTML = `
-                    <div class="video-title">${video.title}</div>
+                    <div class="video-title video-title-clickable" data-video-id="${video.video_id}">${video.title}</div>
                     <div class="video-channel">${video.channel_name}</div>
-                    <div class="video-date">Fetched: ${formatDate(video.fetched_at)}</div>
+                    ${sentimentBadge}
+                    ${video.total_comments ? `<div class="video-stats">${video.total_comments} comments analyzed</div>` : ''}
                     <a href="https://youtube.com/watch?v=${video.video_id}" target="_blank" class="video-link">Watch on YouTube</a>
                 `;
+
+                // Add click handler to video title
+                videoDiv.querySelector('.video-title-clickable').addEventListener('click', () => {
+                    showVideoDetails(video.video_id);
+                });
+
                 videosList.appendChild(videoDiv);
             });
 
@@ -344,6 +381,154 @@ function initializeEventListeners() {
     });
 
     elements.loadVideosBtn.addEventListener('click', loadVideos);
+}
+
+async function showVideoDetails(videoId) {
+    try {
+        showLoading(true);
+
+        const response = await fetch(`${API_BASE}/video/${videoId}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to load video details');
+        }
+
+        // Create modal overlay
+        const modal = document.createElement('div');
+        modal.className = 'video-modal';
+        modal.innerHTML = `
+            <div class="video-modal-content">
+                <div class="video-modal-header">
+                    <h2>${data.video.title}</h2>
+                    <button class="modal-close">&times;</button>
+                </div>
+
+                <div class="sentiment-dashboard">
+                    <h3>Sentiment Analysis</h3>
+                    <div class="sentiment-stats">
+                        <div class="stat-card stat-positive">
+                            <div class="stat-icon">😊</div>
+                            <div class="stat-value">${data.sentimentDistribution.positive}</div>
+                            <div class="stat-label">Positive</div>
+                            <div class="stat-percentage">${((data.sentimentDistribution.positive / data.sentimentDistribution.total) * 100).toFixed(1)}%</div>
+                        </div>
+                        <div class="stat-card stat-neutral">
+                            <div class="stat-icon">😐</div>
+                            <div class="stat-value">${data.sentimentDistribution.neutral}</div>
+                            <div class="stat-label">Neutral</div>
+                            <div class="stat-percentage">${((data.sentimentDistribution.neutral / data.sentimentDistribution.total) * 100).toFixed(1)}%</div>
+                        </div>
+                        <div class="stat-card stat-negative">
+                            <div class="stat-icon">😞</div>
+                            <div class="stat-value">${data.sentimentDistribution.negative}</div>
+                            <div class="stat-label">Negative</div>
+                            <div class="stat-percentage">${((data.sentimentDistribution.negative / data.sentimentDistribution.total) * 100).toFixed(1)}%</div>
+                        </div>
+                        <div class="stat-card stat-total">
+                            <div class="stat-icon">💬</div>
+                            <div class="stat-value">${data.totalComments}</div>
+                            <div class="stat-label">Total Comments</div>
+                            <div class="stat-percentage">${data.topLevelComments} top-level</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comments-section">
+                    <h3>Comments (${data.totalComments})</h3>
+                    <div class="comments-list" id="modal-comments-list"></div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Populate comments
+        const commentsList = modal.querySelector('#modal-comments-list');
+        data.comments.forEach(comment => {
+            commentsList.appendChild(createDetailedCommentElement(comment));
+        });
+
+        // Close modal handlers
+        modal.querySelector('.modal-close').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+
+        showLoading(false);
+
+    } catch (error) {
+        console.error('Error loading video details:', error);
+        alert('Failed to load video details: ' + error.message);
+        showLoading(false);
+    }
+}
+
+function createDetailedCommentElement(comment) {
+    const commentDiv = document.createElement('div');
+    commentDiv.className = 'modal-comment';
+
+    const sentimentClass = comment.sentiment ? `sentiment-${comment.sentiment}` : '';
+    const sentimentEmoji = {
+        'positive': '😊',
+        'negative': '😞',
+        'neutral': '😐'
+    };
+
+    commentDiv.innerHTML = `
+        <div class="comment-header">
+            <div class="comment-author-info">
+                <span class="comment-author">${comment.author}</span>
+                ${comment.sentiment ? `<span class="comment-sentiment-badge ${sentimentClass}">${sentimentEmoji[comment.sentiment]} ${comment.sentiment}</span>` : ''}
+            </div>
+            <div class="comment-meta">
+                <span class="comment-date">${formatDate(comment.published_at)}</span>
+                <span class="comment-likes">👍 ${comment.like_count}</span>
+            </div>
+        </div>
+        <div class="comment-text">${comment.text}</div>
+        ${comment.replies && comment.replies.length > 0 ? `
+            <div class="replies">
+                <button class="toggle-replies-btn">${comment.replies.length} ${comment.replies.length === 1 ? 'Reply' : 'Replies'}</button>
+                <div class="replies-container hidden">
+                    ${comment.replies.map(reply => `
+                        <div class="reply ${reply.sentiment ? `sentiment-${reply.sentiment}` : ''}">
+                            <div class="comment-header">
+                                <div class="comment-author-info">
+                                    <span class="comment-author">${reply.author}</span>
+                                    ${reply.sentiment ? `<span class="comment-sentiment-badge sentiment-${reply.sentiment}">${sentimentEmoji[reply.sentiment]}</span>` : ''}
+                                </div>
+                                <div class="comment-meta">
+                                    <span class="comment-date">${formatDate(reply.published_at)}</span>
+                                    <span class="comment-likes">👍 ${reply.like_count}</span>
+                                </div>
+                            </div>
+                            <div class="comment-text">${reply.text}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        ` : ''}
+    `;
+
+    // Add toggle functionality for replies
+    const toggleBtn = commentDiv.querySelector('.toggle-replies-btn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            const repliesContainer = commentDiv.querySelector('.replies-container');
+            repliesContainer.classList.toggle('hidden');
+            toggleBtn.textContent = repliesContainer.classList.contains('hidden')
+                ? `${comment.replies.length} ${comment.replies.length === 1 ? 'Reply' : 'Replies'}`
+                : `Hide Replies`;
+        });
+    }
+
+    return commentDiv;
 }
 
 document.addEventListener('DOMContentLoaded', function() {

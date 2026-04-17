@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const youtube = require('../services/youtube');
+// Sentiment analyzers - LLM preferred when configured, fallback to local
+const localSentimentAnalyzer = require('../services/sentimentAI');
+const llmSentimentAnalyzer = require('../services/sentimentLLM');
 
 router.post('/fetch-comments', async (req, res) => {
     try {
@@ -11,16 +14,23 @@ router.post('/fetch-comments', async (req, res) => {
             return res.status(400).json({ error: 'YouTube URL is required' });
         }
 
+        console.log('\n=== Starting fetch operation ===');
+        console.log('URL:', url);
+
         const videoId = youtube.extractVideoId(url);
         if (!videoId) {
             return res.status(400).json({ error: 'Invalid YouTube URL' });
         }
+        console.log('✓ Extracted video ID:', videoId);
 
+        console.log('Fetching video details from YouTube...');
         const videoDetails = await youtube.getVideoDetails(videoId);
         if (!videoDetails) {
             return res.status(404).json({ error: 'Video not found' });
         }
+        console.log('✓ Video found:', videoDetails.title);
 
+        console.log('Checking database for existing video...');
         const existingVideo = await db.query(
             'SELECT id, has_transcript, last_comment_date FROM videos WHERE video_id = $1',
             [videoId]
@@ -34,12 +44,14 @@ router.post('/fetch-comments', async (req, res) => {
             dbVideoId = existingVideo.rows[0].id;
             hasTranscript = existingVideo.rows[0].has_transcript || false;
             isUpdate = true;
+            console.log('✓ Video exists in database (updating)');
 
             await db.query(
                 'UPDATE videos SET title = $1, channel_name = $2, fetched_at = CURRENT_TIMESTAMP WHERE id = $3',
                 [videoDetails.title, videoDetails.channelName, dbVideoId]
             );
         } else {
+            console.log('✓ New video, creating database entry');
             const insertResult = await db.query(
                 'INSERT INTO videos (video_id, title, channel_name) VALUES ($1, $2, $3) RETURNING id',
                 [videoId, videoDetails.title, videoDetails.channelName]
@@ -47,10 +59,14 @@ router.post('/fetch-comments', async (req, res) => {
             dbVideoId = insertResult.rows[0].id;
         }
 
+        console.log('Fetching comments from YouTube... (this may take a while)');
         const comments = await youtube.getAllComments(videoId);
+        console.log(`✓ Retrieved ${comments.length} comments from YouTube`);
 
+        console.log('Saving comments to database...');
         const commentIdMap = new Map();
         let newCommentsCount = 0;
+        let savedCount = 0;
 
         for (const comment of comments) {
             const result = await db.query(
@@ -69,7 +85,14 @@ router.post('/fetch-comments', async (req, res) => {
             if (result.rows[0].inserted) {
                 newCommentsCount++;
             }
+
+            savedCount++;
+            if (savedCount % 100 === 0) {
+                console.log(`  → Saved ${savedCount}/${comments.length} comments...`);
+            }
         }
+
+        console.log(`✓ Saved all ${comments.length} comments (${newCommentsCount} new, ${comments.length - newCommentsCount} updated)`);
 
         for (const comment of comments) {
             if (comment.parentId) {
@@ -127,6 +150,100 @@ router.post('/fetch-comments', async (req, res) => {
             transcriptCount = parseInt(existingTranscripts.rows[0].count);
         }
 
+        // Perform sentiment analysis only on comments that don't have sentiment yet
+        console.log('Performing sentiment analysis...');
+
+        // Determine which analyzer to use
+        const useLLM = await llmSentimentAnalyzer.isEnabled();
+        const sentimentAnalyzer = useLLM ? llmSentimentAnalyzer : localSentimentAnalyzer;
+        console.log(`  → Using ${useLLM ? 'LLM' : 'local keyword-based'} sentiment analysis`);
+
+        const commentIdsToAnalyze = [];
+        const commentTextsMap = new Map();
+
+        for (const comment of comments) {
+            const dbCommentId = commentIdMap.get(comment.commentId);
+            if (!dbCommentId) continue;
+            commentIdsToAnalyze.push(dbCommentId);
+            commentTextsMap.set(dbCommentId, comment.text);
+        }
+
+        // Find which comments already have sentiment
+        let existingSentiments = [];
+        if (commentIdsToAnalyze.length > 0) {
+            const existingResult = await db.query(
+                'SELECT comment_id FROM comment_sentiments WHERE comment_id = ANY($1)',
+                [commentIdsToAnalyze]
+            );
+            existingSentiments = existingResult.rows.map(row => row.comment_id);
+        }
+
+        // Only analyze comments without sentiment
+        const commentsToAnalyze = commentIdsToAnalyze.filter(id => !existingSentiments.includes(id));
+
+        console.log(`  → ${commentsToAnalyze.length} comments need analysis (${existingSentiments.length} already analyzed)`);
+
+        const sentimentResults = [];
+        let analyzedCount = 0;
+
+        if (useLLM) {
+            // LLM: process in batches with concurrency
+            const batchSize = 10;
+            for (let i = 0; i < commentsToAnalyze.length; i += batchSize) {
+                const batch = commentsToAnalyze.slice(i, i + batchSize);
+                const batchPromises = batch.map(async (dbCommentId) => {
+                    const commentText = commentTextsMap.get(dbCommentId);
+                    if (!commentText) return null;
+                    const sentiment = await sentimentAnalyzer.analyzeComment(commentText);
+                    return { commentId: dbCommentId, ...sentiment };
+                });
+
+                const batchResults = await Promise.all(batchPromises);
+                for (const result of batchResults) {
+                    if (result) sentimentResults.push(result);
+                }
+
+                analyzedCount += batch.length;
+                if (analyzedCount % 50 === 0 || analyzedCount === commentsToAnalyze.length) {
+                    console.log(`  → Analyzed ${analyzedCount}/${commentsToAnalyze.length} comments...`);
+                }
+            }
+        } else {
+            // Local: process sequentially (fast, no API calls)
+            for (const dbCommentId of commentsToAnalyze) {
+                const commentText = commentTextsMap.get(dbCommentId);
+                if (!commentText) continue;
+
+                const sentiment = await sentimentAnalyzer.analyzeComment(commentText);
+                sentimentResults.push({
+                    commentId: dbCommentId,
+                    ...sentiment
+                });
+
+                analyzedCount++;
+                if (analyzedCount % 50 === 0) {
+                    console.log(`  → Analyzed ${analyzedCount}/${commentsToAnalyze.length} comments...`);
+                }
+            }
+        }
+
+        // Save all sentiment results in bulk
+        if (sentimentResults.length > 0) {
+            await sentimentAnalyzer.saveBulkCommentSentiments(sentimentResults);
+            console.log(`✓ Saved sentiment for ${sentimentResults.length} comments`);
+        } else {
+            console.log('✓ All comments already have sentiment analysis');
+        }
+
+        // Calculate and save video-level sentiment
+        console.log('Calculating overall video sentiment...');
+        const videoSentiment = await sentimentAnalyzer.calculateVideoSentiment(dbVideoId);
+
+        console.log('✓ Sentiment:', videoSentiment.overallSentiment,
+                    `(${videoSentiment.positivePercentage}% positive, ${videoSentiment.negativePercentage}% negative, ${videoSentiment.neutralPercentage}% neutral)`);
+
+        console.log('\n=== Fetch operation completed successfully ===\n');
+
         res.json({
             success: true,
             video: videoDetails,
@@ -134,11 +251,15 @@ router.post('/fetch-comments', async (req, res) => {
             totalComments: comments.length,
             newComments: isUpdate ? newCommentsCount : comments.length,
             transcriptSegments: transcriptCount,
-            transcriptStatus: transcriptStatus
+            transcriptStatus: transcriptStatus,
+            sentiment: videoSentiment
         });
 
     } catch (error) {
-        console.error('Error in fetch-comments:', error);
+        console.error('\n=== ERROR in fetch-comments ===');
+        console.error('Error:', error.message);
+        console.error('Stack:', error.stack);
+        console.error('================================\n');
         res.status(500).json({ error: error.message || 'Failed to fetch comments' });
     }
 });

@@ -79,8 +79,10 @@ async function getAllComments(videoId) {
     const allComments = [];
     let pageToken = null;
     let hasMorePages = true;
+    let pageCount = 0;
 
     while (hasMorePages) {
+        pageCount++;
         const data = await fetchCommentsPage(videoId, pageToken);
 
         if (data.items) {
@@ -113,10 +115,13 @@ async function getAllComments(videoId) {
             }
         }
 
+        console.log(`  → Fetched page ${pageCount}: ${allComments.length} comments so far...`);
+
         pageToken = data.nextPageToken;
         hasMorePages = !!pageToken;
     }
 
+    console.log(`✓ Completed fetching all ${allComments.length} comments from YouTube (${pageCount} pages)`);
     return allComments;
 }
 
