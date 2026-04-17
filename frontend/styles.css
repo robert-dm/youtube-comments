@@ -593,6 +593,14 @@ mark {
     color: #742A2A;
 }
 
+.video-card-dates {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: #A0AEC0;
+}
+
 .sentiment-badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;

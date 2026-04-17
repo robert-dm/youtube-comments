@@ -156,6 +156,7 @@ SELECT
     v.video_id,
     v.title,
     v.channel_name,
+    v.fetched_at,
     vs.total_comments,
     vs.positive_count,
     vs.negative_count,

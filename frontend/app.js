@@ -342,6 +342,9 @@ async function loadVideos(showSpinner = false) {
                 if (video.positive_percentage) stats.push(`<span class="mini-stat positive">${parseFloat(video.positive_percentage).toFixed(0)}% pos</span>`);
                 if (video.negative_percentage) stats.push(`<span class="mini-stat negative">${parseFloat(video.negative_percentage).toFixed(0)}% neg</span>`);
 
+                const analyzedDate = video.analyzed_at ? new Date(video.analyzed_at).toLocaleDateString() : '';
+                const fetchedDate = video.fetched_at ? new Date(video.fetched_at).toLocaleDateString() : '';
+
                 videoCard.innerHTML = `
                     <div class="video-card-title">${video.title}</div>
                     <div class="video-card-channel">${video.channel_name}</div>
@@ -350,6 +353,10 @@ async function loadVideos(showSpinner = false) {
                         ${video.total_comments ? `<span class="video-card-comments">${video.total_comments} comments</span>` : ''}
                     </div>
                     ${stats.length ? `<div class="video-card-stats">${stats.join('')}</div>` : ''}
+                    <div class="video-card-dates">
+                        ${fetchedDate ? `<span>Fetched: ${fetchedDate}</span>` : ''}
+                        ${analyzedDate ? `<span>Analyzed: ${analyzedDate}</span>` : ''}
+                    </div>
                 `;
 
                 videosGrid.appendChild(videoCard);
