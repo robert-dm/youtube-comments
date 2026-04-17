@@ -2,6 +2,7 @@
 
 ALTER TABLE videos ADD COLUMN IF NOT EXISTS last_comment_date TIMESTAMP;
 ALTER TABLE videos ADD COLUMN IF NOT EXISTS has_transcript BOOLEAN DEFAULT FALSE;
+ALTER TABLE videos ADD COLUMN IF NOT EXISTS published_at TIMESTAMP;
 
 -- Update existing videos to set has_transcript flag based on existing transcripts
 UPDATE videos v

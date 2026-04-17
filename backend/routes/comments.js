@@ -47,14 +47,14 @@ router.post('/fetch-comments', async (req, res) => {
             console.log('✓ Video exists in database (updating)');
 
             await db.query(
-                'UPDATE videos SET title = $1, channel_name = $2, fetched_at = CURRENT_TIMESTAMP WHERE id = $3',
-                [videoDetails.title, videoDetails.channelName, dbVideoId]
+                'UPDATE videos SET title = $1, channel_name = $2, published_at = $3, fetched_at = CURRENT_TIMESTAMP WHERE id = $4',
+                [videoDetails.title, videoDetails.channelName, videoDetails.publishedAt, dbVideoId]
             );
         } else {
             console.log('✓ New video, creating database entry');
             const insertResult = await db.query(
-                'INSERT INTO videos (video_id, title, channel_name) VALUES ($1, $2, $3) RETURNING id',
-                [videoId, videoDetails.title, videoDetails.channelName]
+                'INSERT INTO videos (video_id, title, channel_name, published_at) VALUES ($1, $2, $3, $4) RETURNING id',
+                [videoId, videoDetails.title, videoDetails.channelName, videoDetails.publishedAt]
             );
             dbVideoId = insertResult.rows[0].id;
         }

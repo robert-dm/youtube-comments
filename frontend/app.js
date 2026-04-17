@@ -343,7 +343,7 @@ async function loadVideos(showSpinner = false) {
                 if (video.negative_percentage) stats.push(`<span class="mini-stat negative">${parseFloat(video.negative_percentage).toFixed(0)}% neg</span>`);
 
                 const analyzedDate = video.analyzed_at ? new Date(video.analyzed_at).toLocaleDateString() : '';
-                const fetchedDate = video.fetched_at ? new Date(video.fetched_at).toLocaleDateString() : '';
+                const publishedDate = video.published_at ? new Date(video.published_at).toLocaleDateString() : '';
 
                 videoCard.innerHTML = `
                     <div class="video-card-title">${video.title}</div>
@@ -354,7 +354,7 @@ async function loadVideos(showSpinner = false) {
                     </div>
                     ${stats.length ? `<div class="video-card-stats">${stats.join('')}</div>` : ''}
                     <div class="video-card-dates">
-                        ${fetchedDate ? `<span>Fetched: ${fetchedDate}</span>` : ''}
+                        ${publishedDate ? `<span>Published: ${publishedDate}</span>` : ''}
                         ${analyzedDate ? `<span>Analyzed: ${analyzedDate}</span>` : ''}
                     </div>
                 `;

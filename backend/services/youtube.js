@@ -36,7 +36,8 @@ async function getVideoDetails(videoId) {
             return {
                 videoId: videoId,
                 title: video.snippet.title,
-                channelName: video.snippet.channelTitle
+                channelName: video.snippet.channelTitle,
+                publishedAt: video.snippet.publishedAt
             };
         }
 
