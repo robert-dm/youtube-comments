@@ -315,7 +315,7 @@ router.get('/llm-config', authenticateAdmin, async (req, res) => {
             config[row.config_key] = row.config_value;
         });
 
-        // Mask API key for security
+        // Mask API key for security - never send the real key to the frontend
         if (config.llm_api_key) {
             const key = config.llm_api_key;
             config.llm_api_key_masked = key.substring(0, 8) + '...' + key.substring(key.length - 4);
@@ -324,6 +324,7 @@ router.get('/llm-config', authenticateAdmin, async (req, res) => {
             config.llm_api_key_masked = '';
             config.llm_api_key_set = false;
         }
+        delete config.llm_api_key;
 
         res.json(config);
 

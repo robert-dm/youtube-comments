@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Details - YouTube Comment Explorer</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .video-detail-page {
+            min-height: 100vh;
+            background: #F7FAFC;
+        }
+
+        .video-detail-nav {
+            background: white;
+            border-bottom: 1px solid #E2E8F0;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .video-detail-nav .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: none;
+            border: 2px solid #E2E8F0;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #4A5568;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-back:hover {
+            border-color: #5B7CED;
+            color: #5B7CED;
+        }
+
+        .video-detail-nav h1 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn-share {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #5B7CED;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-share:hover {
+            background: #4C63D2;
+        }
+
+        .btn-youtube {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #FF0000;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .btn-youtube:hover {
+            background: #CC0000;
+        }
+
+        .video-detail-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .video-detail-header {
+            margin-bottom: 2rem;
+        }
+
+        .video-detail-header h2 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.75rem;
+            color: #2D3748;
+        }
+
+        .video-detail-header .channel-name {
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        /* Override comments-list for full page */
+        .video-detail-page .comments-list {
+            max-height: none;
+            overflow-y: visible;
+        }
+
+        .video-detail-page .sentiment-dashboard {
+            border-radius: 12px;
+            border: none;
+            margin-bottom: 2rem;
+        }
+
+        .video-detail-page .comments-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .share-toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2D3748;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .share-toast.show {
+            opacity: 1;
+        }
+
+        .loading-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            color: #718096;
+        }
+
+        .loading-page .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #E2E8F0;
+            border-top-color: #5B7CED;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            color: #742A2A;
+        }
+
+        .error-page h2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .error-page a {
+            margin-top: 1rem;
+            color: #5B7CED;
+        }
+    </style>
+</head>
+<body>
+    <div class="video-detail-page">
+        <nav class="video-detail-nav">
+            <div class="nav-inner">
+                <a href="/" class="btn-back">← Back</a>
+                <h1>YouTube Comment Explorer</h1>
+                <div class="nav-actions">
+                    <button class="btn-share" onclick="shareUrl()">Copy Link</button>
+                    <a id="youtube-link" href="#" target="_blank" class="btn-youtube">Watch on YouTube</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="video-detail-container" id="video-content">
+            <div class="loading-page" id="loading-state">
+                <div class="spinner"></div>
+                <p>Loading video details...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="share-toast" id="share-toast">Link copied to clipboard!</div>
+
+    <script>
+        const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+
+        function getVideoIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('v');
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString();
+        }
+
+        function shareUrl() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                const toast = document.getElementById('share-toast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            });
+        }
+
+        function renderVideoDetails(data) {
+            const container = document.getElementById('video-content');
+            const total = data.sentimentDistribution.total || 1;
+
+            document.title = `${data.video.title} - YouTube Comment Explorer`;
+            document.getElementById('youtube-link').href = `https://youtube.com/watch?v=${data.video.videoId}`;
+
+            container.innerHTML = `
+                <div class="video-detail-header">
+                    <h2>${data.video.title}</h2>
+                    <div class="channel-name">${data.video.channelName}</div>
+                </div>
+
+                <div class="sentiment-dashboard">
+                    <h3>Sentiment Analysis</h3>
+                    <div class="sentiment-stats">
+                        <div class="stat-card stat-positive">
+                            <div class="stat-icon">😊</div>
+                            <div class="stat-value">${data.sentimentDistribution.positive}</div>
+                            <div class="stat-label">Positive</div>
+                            <div class="stat-percentage">${((data.sentimentDistribution.positive / total) * 100).toFixed(1)}%</div>
+                        </div>
+                        <div class="stat-card stat-neutral">
+                            <div class="stat-icon">😐</div>
+                            <div class="stat-value">${data.sentimentDistribution.neutral}</div>
+                            <div class="stat-label">Neutral</div>
+                            <div class="stat-percentage">${((data.sentimentDistribution.neutral / total) * 100).toFixed(1)}%</div>
+                        </div>
+                        <div class="stat-card stat-negative">
+                            <div class="stat-icon">😞</div>
+                            <div class="stat-value">${data.sentimentDistribution.negative}</div>
+                            <div class="stat-label">Negative</div>
+                            <div class="stat-percentage">${((data.sentimentDistribution.negative / total) * 100).toFixed(1)}%</div>
+                        </div>
+                        <div class="stat-card stat-total">
+                            <div class="stat-icon">💬</div>
+                            <div class="stat-value">${data.totalComments}</div>
+                            <div class="stat-label">Total Comments</div>
+                            <div class="stat-percentage">${data.topLevelComments} top-level</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comments-section">
+                    <h3>Comments (${data.totalComments})</h3>
+                    <div class="comments-list" id="comments-list"></div>
+                </div>
+            `;
+
+            const commentsList = document.getElementById('comments-list');
+            data.comments.forEach(comment => {
+                commentsList.appendChild(createCommentElement(comment));
+            });
+        }
+
+        function createCommentElement(comment) {
+            const div = document.createElement('div');
+            div.className = 'modal-comment';
+
+            const sentimentClass = comment.sentiment ? `sentiment-${comment.sentiment}` : '';
+            if (comment.sentiment) div.classList.add(sentimentClass);
+
+            const sentimentEmoji = { 'positive': '😊', 'negative': '😞', 'neutral': '😐' };
+
+            div.innerHTML = `
+                <div class="comment-header">
+                    <div class="comment-author-info">
+                        <span class="comment-author">${comment.author}</span>
+                        ${comment.sentiment ? `<span class="comment-sentiment-badge ${sentimentClass}">${sentimentEmoji[comment.sentiment]} ${comment.sentiment}</span>` : ''}
+                    </div>
+                    <div class="comment-meta">
+                        <span class="comment-date">${formatDate(comment.published_at)}</span>
+                        <span class="comment-likes">👍 ${comment.like_count}</span>
+                    </div>
+                </div>
+                <div class="comment-text">${comment.text}</div>
+                ${comment.replies && comment.replies.length > 0 ? `
+                    <div class="replies">
+                        <button class="toggle-replies-btn">${comment.replies.length} ${comment.replies.length === 1 ? 'Reply' : 'Replies'}</button>
+                        <div class="replies-container hidden">
+                            ${comment.replies.map(reply => `
+                                <div class="reply ${reply.sentiment ? `sentiment-${reply.sentiment}` : ''}">
+                                    <div class="comment-header">
+                                        <div class="comment-author-info">
+                                            <span class="comment-author">${reply.author}</span>
+                                            ${reply.sentiment ? `<span class="comment-sentiment-badge sentiment-${reply.sentiment}">${sentimentEmoji[reply.sentiment]}</span>` : ''}
+                                        </div>
+                                        <div class="comment-meta">
+                                            <span class="comment-date">${formatDate(reply.published_at)}</span>
+                                            <span class="comment-likes">👍 ${reply.like_count}</span>
+                                        </div>
+                                    </div>
+                                    <div class="comment-text">${reply.text}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+
+            const toggleBtn = div.querySelector('.toggle-replies-btn');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    const repliesContainer = div.querySelector('.replies-container');
+                    repliesContainer.classList.toggle('hidden');
+                    toggleBtn.textContent = repliesContainer.classList.contains('hidden')
+                        ? `${comment.replies.length} ${comment.replies.length === 1 ? 'Reply' : 'Replies'}`
+                        : 'Hide Replies';
+                });
+            }
+
+            return div;
+        }
+
+        async function loadVideo() {
+            const videoId = getVideoIdFromUrl();
+
+            if (!videoId) {
+                document.getElementById('video-content').innerHTML = `
+                    <div class="error-page">
+                        <h2>No video specified</h2>
+                        <p>Please provide a video ID in the URL.</p>
+                        <a href="/">← Go back home</a>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/video/${videoId}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to load video');
+                }
+
+                renderVideoDetails(data);
+
+            } catch (error) {
+                document.getElementById('video-content').innerHTML = `
+                    <div class="error-page">
+                        <h2>Error loading video</h2>
+                        <p>${error.message}</p>
+                        <a href="/">← Go back home</a>
+                    </div>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadVideo);
+    </script>
+</body>
+</html>

@@ -258,7 +258,6 @@ router.post('/fetch-comments', async (req, res) => {
     } catch (error) {
         console.error('\n=== ERROR in fetch-comments ===');
         console.error('Error:', error.message);
-        console.error('Stack:', error.stack);
         console.error('================================\n');
         res.status(500).json({ error: error.message || 'Failed to fetch comments' });
     }

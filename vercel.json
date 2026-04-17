@@ -20,6 +20,10 @@
       "dest": "frontend/admin.html"
     },
     {
+      "src": "/video.html",
+      "dest": "frontend/video.html"
+    },
+    {
       "src": "/(.*\\.(css|js|ico|png|jpg|svg))",
       "dest": "frontend/$1"
     },

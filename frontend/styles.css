@@ -512,6 +512,87 @@ mark {
     margin-top: 0.25rem;
 }
 
+/* Videos Section Home */
+.videos-section-home {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+}
+
+.video-card {
+    display: block;
+    padding: 1.25rem;
+    background: #F7FAFC;
+    border: 2px solid #E2E8F0;
+    border-radius: 10px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.video-card:hover {
+    border-color: #5B7CED;
+    box-shadow: 0 4px 12px rgba(91, 124, 237, 0.15);
+    transform: translateY(-2px);
+}
+
+.video-card-title {
+    font-weight: 700;
+    color: #2D3748;
+    font-size: 1rem;
+    margin-bottom: 0.35rem;
+    line-height: 1.4;
+}
+
+.video-card-channel {
+    color: #718096;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.video-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.video-card-comments {
+    font-size: 0.8rem;
+    color: #A0AEC0;
+}
+
+.video-card-stats {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.mini-stat {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.mini-stat.positive {
+    background: #C6F6D5;
+    color: #22543D;
+}
+
+.mini-stat.negative {
+    background: #FED7D7;
+    color: #742A2A;
+}
+
 .sentiment-badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;

@@ -73,40 +73,13 @@
             <div id="search-status" class="status-message"></div>
         </div>
 
-        <div class="content-grid">
-            <div class="results-column">
-                <h2 class="section-title">Results</h2>
-                <div id="results-container" class="results-area">
-                    <div class="empty-state">
-                        <svg class="empty-icon" width="120" height="120" viewBox="0 0 120 120" fill="none">
-                            <rect x="20" y="30" width="60" height="40" rx="4" fill="#E8EAF0"/>
-                            <circle cx="75" cy="75" r="30" stroke="#A0A3BD" stroke-width="6" fill="none"/>
-                            <path d="M95 95L110 110" stroke="#A0A3BD" stroke-width="6" stroke-linecap="round"/>
-                        </svg>
-                        <p class="empty-text">Paste a YouTube URL to begin.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="history-column">
-                <div class="history-header">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M10 20C4.477 20 0 15.523 0 10S4.477 0 10 0s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm1-8h4v2h-6V6h2v4z" fill="currentColor"/>
-                    </svg>
-                    <h3>History</h3>
-                    <button class="collapse-btn">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
-                </div>
-                <div class="history-content">
-                    <p class="history-placeholder">Fetched videos will appear here.</p>
-                    <div id="videos-container"></div>
-                    <button id="load-videos-btn" class="btn-view-history">View history</button>
-                </div>
-            </div>
+        <div class="videos-section-home">
+            <h2 class="section-title">Analyzed Videos</h2>
+            <div id="videos-container"></div>
+            <button id="load-videos-btn" class="btn-view-history hidden">View history</button>
         </div>
+
+        <div id="results-container" class="results-area hidden"></div>
     </div>
 
     <div id="loading-overlay" class="loading-overlay hidden">
