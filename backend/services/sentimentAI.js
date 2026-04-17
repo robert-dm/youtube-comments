@@ -211,24 +211,28 @@ class AISentimentAnalyzer {
             else neutralCount++;
         });
 
-        // Calculate percentages
-        const positivePercentage = ((positiveCount / totalComments) * 100).toFixed(2);
-        const negativePercentage = ((negativeCount / totalComments) * 100).toFixed(2);
-        const neutralPercentage = ((neutralCount / totalComments) * 100).toFixed(2);
-        const averageScore = (totalScore / totalComments).toFixed(2);
+        // Calculate percentages as numbers
+        const positivePercentage = parseFloat(((positiveCount / totalComments) * 100).toFixed(2));
+        const negativePercentage = parseFloat(((negativeCount / totalComments) * 100).toFixed(2));
+        const neutralPercentage = parseFloat(((neutralCount / totalComments) * 100).toFixed(2));
+        const averageScore = parseFloat((totalScore / totalComments).toFixed(2));
 
-        // Determine overall sentiment
+        // Determine overall sentiment based on opinionated comments (positive vs negative)
+        // Neutral comments are "no opinion", so we compare positive vs negative directly
         let overallSentiment;
-        const dominantPercentage = Math.max(positivePercentage, negativePercentage, neutralPercentage);
+        const opinionatedCount = positiveCount + negativeCount;
 
-        if (dominantPercentage < 40) {
-            overallSentiment = 'mixed';
-        } else if (positivePercentage >= dominantPercentage) {
-            overallSentiment = 'positive';
-        } else if (negativePercentage >= dominantPercentage) {
-            overallSentiment = 'negative';
-        } else {
+        if (opinionatedCount === 0) {
             overallSentiment = 'neutral';
+        } else {
+            const positiveRatio = positiveCount / opinionatedCount;
+            if (positiveRatio >= 0.6) {
+                overallSentiment = 'positive';
+            } else if (positiveRatio <= 0.4) {
+                overallSentiment = 'negative';
+            } else {
+                overallSentiment = 'mixed';
+            }
         }
 
         // Save to database

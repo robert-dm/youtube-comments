@@ -42,7 +42,7 @@ async function getVideoDetails(videoId) {
 
         return null;
     } catch (error) {
-        console.error('Error fetching video details:', error.response?.data || error.message);
+        console.error('Error fetching video details:', error.message);
         throw new Error('Failed to fetch video details');
     }
 }
@@ -70,7 +70,7 @@ async function fetchCommentsPage(videoId, pageToken = null) {
         if (error.response?.status === 403) {
             throw new Error('Comments are disabled for this video or API quota exceeded');
         }
-        console.error('Error fetching comments:', error.response?.data || error.message);
+        console.error('Error fetching comments:', error.message);
         throw new Error('Failed to fetch comments from YouTube');
     }
 }

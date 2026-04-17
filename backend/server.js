@@ -42,7 +42,7 @@ app.get('/', (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    console.error('Server error:', err.message);
     res.status(500).json({ error: 'Something went wrong!' });
 });
 
